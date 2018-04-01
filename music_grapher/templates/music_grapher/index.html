@@ -1,0 +1,26 @@
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<style>
+body {
+    background-color: #3e3e40;
+}
+.title {
+    color: #E0E0E3;
+}
+</style>
+</head>
+
+<div>
+    <h1 class="title text-center">
+    Graph That Band
+    </h1>
+    <h2 align="center">
+    {{ Error }}
+    </h2>
+    <br>
+    <form method="POST" class="post-form" align="center">{% csrf_token %}
+        {{ Bform }}
+        <button type="submit" class="save btn btn-default">Submit</button>
+    </form>
+</div>

@@ -1,0 +1,302 @@
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript">
+$(function () {
+    $('#container').highcharts({
+        xAxis: {
+        	title: {
+        		text: 'Year'
+        	},
+            startOnTick: false,
+            min: {{ min_date }},
+            max: {{ max_date }}
+        },
+
+        yAxis: {
+        	title: {
+        		text: 'Score'
+        	},
+            min: {{ min_score }},
+            max: {{ max_score }}
+        },
+
+        title: {
+            text: "{{ bandname }}"
+        },
+
+        tooltip: {
+        	formatter: function () {
+        		return '<b>Album Name: </b>' + this.point.name + '<br/><b>Release Year: </b>' + this.point.x + '<br/><b>Critic Score: </b>' + this.point.y;
+        	}
+        },
+
+        plotOptions: {
+            series: {
+                cursor: 'pointer',
+                point: {
+                    events: {
+                        click: function () {
+                            window.open(this.options.link, "_blank")
+                        }
+                    }
+                }
+                /*legendItemClick: function(event) {
+                    chart.yAxis[0].options.tickInterval = 2;
+                    chart.options.yAxis.min = 0;
+                    chart.options.yAxis.max = 20;
+                    chart.redraw();
+                }*/
+            }
+        },
+
+        series: [{
+            type: 'line',
+            name: 'Trend',
+            data: {{ regression|safe }},
+            marker: {
+                enabled: false
+            },
+            enableMouseTracking: false
+        }, {
+            type: 'scatter',
+            name: 'Albums',
+            data: {{ data|safe }}, /*quotes come out as &quot; if not |safe*/
+            marker: {
+                radius: 4,
+                fillColor: '#949494'
+            }
+        }]
+    });
+});
+
+/**
+ * (c) 2010-2017 Torstein Honsi
+ *
+ * License: www.highcharts.com/license
+ * 
+ * Dark theme for Highcharts JS
+ * @author Torstein Honsi
+ */
+
+Highcharts.theme = {
+   colors: ['#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066',
+      '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
+   chart: {
+      backgroundColor: {
+        color: '#3e3e40'
+      },
+      style: {
+         fontFamily: '\'Unica One\', sans-serif'
+      },
+      plotBorderColor: '#606063'
+   },
+   title: {
+      style: {
+         color: '#E0E0E3',
+         textTransform: 'uppercase',
+         fontSize: '20px'
+      }
+   },
+   subtitle: {
+      style: {
+         color: '#E0E0E3',
+         textTransform: 'uppercase'
+      }
+   },
+   xAxis: {
+      gridLineColor: '#707073',
+      labels: {
+         style: {
+            color: '#E0E0E3'
+         }
+      },
+      lineColor: '#707073',
+      minorGridLineColor: '#505053',
+      tickColor: '#707073',
+      title: {
+         style: {
+            color: '#A0A0A3'
+
+         }
+      }
+   },
+   yAxis: {
+      gridLineColor: '#707073',
+      labels: {
+         style: {
+            color: '#E0E0E3'
+         }
+      },
+      lineColor: '#707073',
+      minorGridLineColor: '#505053',
+      tickColor: '#707073',
+      tickWidth: 1,
+      title: {
+         style: {
+            color: '#A0A0A3'
+         }
+      }
+   },
+   tooltip: {
+      backgroundColor: 'rgba(0, 0, 0, 0.85)',
+      style: {
+         color: '#F0F0F0'
+      }
+   },
+   plotOptions: {
+      series: {
+         dataLabels: {
+            color: '#B0B0B3'
+         },
+         marker: {
+            lineColor: '#333'
+         }
+      },
+      boxplot: {
+         fillColor: '#505053'
+      },
+      candlestick: {
+         lineColor: 'white'
+      },
+      errorbar: {
+         color: 'white'
+      }
+   },
+   legend: {
+      itemStyle: {
+         color: '#E0E0E3'
+      },
+      itemHoverStyle: {
+         color: '#FFF'
+      },
+      itemHiddenStyle: {
+         color: '#606063'
+      }
+   },
+   credits: {
+      style: {
+         color: '#666'
+      }
+   },
+   labels: {
+      style: {
+         color: '#707073'
+      }
+   },
+
+   drilldown: {
+      activeAxisLabelStyle: {
+         color: '#F0F0F3'
+      },
+      activeDataLabelStyle: {
+         color: '#F0F0F3'
+      }
+   },
+
+   navigation: {
+      buttonOptions: {
+         symbolStroke: '#DDDDDD',
+         theme: {
+            fill: '#505053'
+         }
+      }
+   },
+
+   // scroll charts
+   rangeSelector: {
+      buttonTheme: {
+         fill: '#505053',
+         stroke: '#000000',
+         style: {
+            color: '#CCC'
+         },
+         states: {
+            hover: {
+               fill: '#707073',
+               stroke: '#000000',
+               style: {
+                  color: 'white'
+               }
+            },
+            select: {
+               fill: '#000003',
+               stroke: '#000000',
+               style: {
+                  color: 'white'
+               }
+            }
+         }
+      },
+      inputBoxBorderColor: '#505053',
+      inputStyle: {
+         backgroundColor: '#333',
+         color: 'silver'
+      },
+      labelStyle: {
+         color: 'silver'
+      }
+   },
+
+   navigator: {
+      handles: {
+         backgroundColor: '#666',
+         borderColor: '#AAA'
+      },
+      outlineColor: '#CCC',
+      maskFill: 'rgba(255,255,255,0.1)',
+      series: {
+         color: '#7798BF',
+         lineColor: '#A6C7ED'
+      },
+      xAxis: {
+         gridLineColor: '#505053'
+      }
+   },
+
+   scrollbar: {
+      barBackgroundColor: '#808083',
+      barBorderColor: '#808083',
+      buttonArrowColor: '#CCC',
+      buttonBackgroundColor: '#606063',
+      buttonBorderColor: '#606063',
+      rifleColor: '#FFF',
+      trackBackgroundColor: '#404043',
+      trackBorderColor: '#404043'
+   },
+
+   // special colors for some of the
+   legendBackgroundColor: 'rgba(0, 0, 0, 0.5)',
+   background2: '#505053',
+   dataLabelsColor: '#B0B0B3',
+   textColor: '#C0C0C0',
+   contrastTextColor: '#F0F0F3',
+   maskColor: 'rgba(255,255,255,0.3)'
+};
+
+// Apply the theme
+Highcharts.setOptions(Highcharts.theme);
+</script>
+<style>
+body {
+    background-color: #3e3e40;
+}
+.title {
+    color: #E0E0E3;
+}
+</style>
+</head>
+
+<body>
+    <div class="music_graph">
+	    <div id="container" style="width:100%; height:400px;"></div>	
+    </div>
+    <br>
+    <form method="POST" class="navbar-form" align="center">
+        {% csrf_token %}
+        {{ Bform }}
+        <button type="submit" class="btn btn-default">Submit</button>
+    </form>
+</body>
