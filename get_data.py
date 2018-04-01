@@ -1,10 +1,3 @@
-import os
-import django
-import sys
-sys.path.append('C:\Python35\website\graphthatband')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-django.setup()
-
 from music_grapher.models import Band, Album, Reviews, BandSearch
 
 import urllib.request
