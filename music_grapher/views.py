@@ -16,47 +16,22 @@ import math
 from .models import Band, Album, Review, BandSearch
 from .forms import BandForm
 
-def RetrieveInfo(name):
-    i=0
-
-    for checkDate in soupA.findAll('div', {"class" : "ratingRowContainer"}):
-        if checkDate.contents == []:
-            del albumYears[i]
-            del albumNames[i]
-            ##No i+1 since the length of the list has reduced by 1
-        else:
-            i = i+1
-            
-    for scores in soupA.findAll('div', {"class" : "rating"}):
-        albumScores.append(int(scores.text))
-        
-    for j in albumYears:
-        if j < 1900:
-            del albumYears[j-1]
-            del albumNames[j-1]
-            del albumScores[j-1]
-
-    k=0
-
-    return albumNames, albumScores, albumYears, data, max_date, min_date, regression, max_score, min_score
-
-
 def band_input(request):
     if request.method == "POST":
         Bform = BandForm(request.POST)
         if Bform.is_valid():
             try:
                 bandname = Bform.cleaned_data.get('band_input')
-                band = BandSearch(Bform.cleaned_data.get('band_input'))
+                bandsearch = BandSearch(Bform.cleaned_data.get('band_input'))
                 Bandform = BandForm()
                 return render(request, 'music_grapher/graph.html', {'Bform': Bform,
-                                                                    'regression': band.regression,
-                                                                    'bandname': band.name,
-                                                                    'data': band.data,
-                                                                    'max_date': band.max_date,
-                                                                    'min_date': band.min_date,
-                                                                    'min_score': band.min_score,
-                                                                    'max_score': band.max_score})
+                                                                    'regression': bandsearch.band.regression,
+                                                                    'bandname': bandsearch.band.band_name,
+                                                                    'data': bandsearch.json_string,
+                                                                    'max_date': 2020,##bandsearch.max_date,
+                                                                    'min_date': 1900,#bandsearch.min_date,
+                                                                    'min_score': 0,#bandsearch.min_score,
+                                                                    'max_score': 100})#bandsearch.max_score})
             except (NameError, AttributeError) as e:
                 ErrorMessage = 'Band name "' + bandname + '" not found, please try again.'
                 return render(request, 'music_grapher/index.html', {'Bform': Bform, 'Error': ErrorMessage})

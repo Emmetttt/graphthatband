@@ -5,3 +5,6 @@ myvenv
 db.sqlite3
 /static
 .DS_Store
+/graphthatband/
+aoty_band_key.pickle
+get_data.py

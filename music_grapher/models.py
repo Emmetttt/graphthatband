@@ -43,66 +43,122 @@ class Review(models.Model):
 
 class BandSearch:
     def __init__(self, name):
-        self.name = name.lower()
-        self.nameDashed = name.replace(' ', '-')
-        self.data = [] 
-        self.max_date = 0 
-        self.min_date = 0 
-        self.regression = [] 
-        self.max_score = [] 
-        self.min_score = []
-        self.albumData = []
-        self.populateData()
+        self.band = Band.objects.get(band_name = name)
+        self.albums = list(Album.objects.filter(band_id = self.band.band_id))
+        self.json_string = self.jsonify()
+        self.min_date = 1900
+        self.max_date = 2020
+        self.min_score = 0
+        self.max_score = 100
 
-    def __print__(self):
-        print(self.name)
-        print(self.data)
-        print(self.max_date)
-        print(self.min_date)
-        print(self.max_score)
-        print(self.min_score)
-        print(self.albumData)
+    def jsonify(self):
+        data = []
+        k=0
+        for album in self.albums: ##Gets data into javascript readable format
+            data.append('{name: "' + album.album_name + 
+                        '",x: "' + self.fract_year(str(album.date)) + 
+                        '",link: "' + album.album_link + 
+                        '",y: ' + str(album.critic_score_avg) + '}')
+            data[k] = data[k].replace("'", "")
+            k = k+1
 
-    def __soupSetup(self, website):
-        ##Setup for any scraping
-        page = website
+        data = str(data).replace("'", "")
+        return data
+
+    def fract_year(self, date):
+        #February 16,  2015 -> 2015.2something
+        times = date.split("-")
+        return str(int(times[0]) + (int(times[1])/13) + (int(times[2])/366))
+
+    def MinMax(self):
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class PopDB:
+    def __init__(self):
+        print("PopDB Start")
+        i = self.getLastBand()
+        print("ID: ", i)
+        while i < 3000:#40000:
+            url = 'https://www.albumoftheyear.org/artist/' + str(i) + '/'
+            band_soup = self.openPage(url)
+            self.getBandData(band_soup, i)
+            #Basic data retreived from band page, now get specific album data
+            hrefs = [a.album_link for a in list(Album.objects.filter(band_id=i))]
+            album_id = [int(a.id) for a in list(Album.objects.filter(band_id=i))]
+            count = 0
+            for album_href in hrefs:
+                album_soup = self.openPage(album_href)
+                self.getAlbumData(album_soup, album_id[count])
+                self.getReviewData(album_soup, album_id[count])
+                count+=1
+
+            print("ID: ", i)
+            i+=1
+
+    def openPage(self, page):
         headers = {'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5)'}
         urllibpage = requests.get(page, headers=headers)
         soup = BeautifulSoup(urllibpage.text, "html.parser")
         return soup
 
-    def getArtistPage(self):
-        ##Pass through the band id and the AOTY url and it will populate self.bandInfo
-        bandquery = Band.objects.get(band_name = self.nameDashed)
-        url = 'https://www.albumoftheyear.org/artist/' + str(bandquery.band_id) + '/'
-        artistsoup = self.__soupSetup(url)
-        return artistsoup
+    def getLastBand(self):
+        x = Band.objects.latest('band_id')
+        return x.band_id+1
 
-    def getData(self, soup):
+    def getBandData(self, soup, band_fk):
+        bandName = soup.find('h1', {"class": "artistHeadline"}).text
         albumContainer = soup.find('div', {"class" : "facetContent"})
         albumList = albumContainer.findChildren()
         for row in albumList: #for each album found
             #Is not a subheadline, needs to be split again
-            album = {}
+            album = {
+                "band_name": bandName,
+                "album_link": "X",
+                "album_title": "X",
+                "album_type": "X",
+                "critic_score": 0,
+                "no_critic_reviews": 0,
+                "user_score": 0,
+                "no_user_reviews": 0,
+            }
+
             datarow = row.findChildren()
             for data in datarow: #for each album find data
-                if data.has_attr("class") and data.get("class")[0] == "date" and "album_year" not in album:
-                    album["album_year"] = int(data.text)
-                if data.has_attr("href") and "album_link" not in album:
+                if data.has_attr("href"):
                     album["album_link"] = "http://www.albumoftheyear.org" + data.get('href')
-                if data.has_attr("class") and data.get("class")[0] == "albumTitle" and "album_title" not in album:
+                if data.has_attr("class") and data.get("class")[0] == "albumTitle":
                     album["album_title"] = data.text
                 #if data.has_attr("class") and data["class"][0] == "type" and "album_type" not in album:
-                if data.has_attr("class") and data.get("class")[0] == "type" and "album_type" not in album:
+                if data.has_attr("class") and data.get("class")[0] == "type":
                     album["album_type"] = data.text
                 if data.has_attr("class") and data.get("class")[0] == 'ratingRowContainer':
                     ratingdiv = data.findChildren()
                     for rating in ratingdiv:
-                        if "critic score" in rating.text and "\n" in rating.text and "critic_score" not in album:
+                        if "critic score" in rating.text and "\n" in rating.text:
                             album["critic_score"] = int(rating.find("div", {"class": "rating"}).text)
-                            album["no_critic_reviews"] = rating.findAll("div", {"class": "ratingText"})[-1].text
-                        if "user score" in rating.text and "\n" in rating.text and "user_score" not in album:
+                            album["no_critic_reviews"] = int(rating.findAll("div", {"class": "ratingText"})[-1].text[1:-1])
+                        if "user score" in rating.text and "\n" in rating.text:
                             album["user_score"] = int(rating.find("div", {"class": "rating"}).text)
+<<<<<<< HEAD
                             album["no_user_reviews"] = rating.findAll("div", {"class": "ratingText"})[-1].text
             if all([item in album for item in ["album_year", "album_link", "album_title"]]):
                 self.albumData.append(album)
@@ -275,6 +331,8 @@ class PopDB:
                             album["no_critic_reviews"] = int(rating.findAll("div", {"class": "ratingText"})[-1].text[1:-1])
                         if "user score" in rating.text and "\n" in rating.text:
                             album["user_score"] = int(rating.find("div", {"class": "rating"}).text)
+=======
+>>>>>>> b2d4da7d36c530951c0017e0a080b8fb36f75d16
                             album["no_user_reviews"] = int(rating.findAll("div", {"class": "ratingText"})[-1].text[1:-1])
             #If data is complete, insert to DB
             if album["critic_score"] + album["user_score"] != 0:
@@ -300,7 +358,12 @@ class PopDB:
             if "Release Date" in row.text:
                 date = row.text
                 date = date[:-15]
+<<<<<<< HEAD
                 album.date = date
+=======
+                album.date = self.getdate(date)
+                print(album.date)
+>>>>>>> b2d4da7d36c530951c0017e0a080b8fb36f75d16
             elif "Label" in row.text:
                 label = row.text
                 label = label[:-8]
@@ -309,6 +372,42 @@ class PopDB:
                 genre = row.text
                 genre = genre[:-9]
                 album.genre = genre
+<<<<<<< HEAD
+=======
+        #save changes
+        album.save()
+
+    def getdate(self, string):
+        #February 16,  2015 -> 2015-02-16
+        months = {
+            "January": "01",
+            "February": "02",
+            "March": "03",
+            "April": "04",
+            "May": "05",
+            "June": "06",
+            "July": "07",
+            "August": "08",
+            "September": "09",
+            "October": "10",
+            "December": "11",
+            "November": "12",
+        }
+        print(string)
+        indiv = string.split(" ")
+        if len(indiv) < 3:
+            thisyear = string.relace(" ")
+            thismonth = 0
+            thisday = 0
+        else:
+            thisyear = indiv[3]
+            thismonth = months[indiv[0]]
+            thisday = indiv[1]
+            thisday = thisday.replace(",", "")
+            if int(thisday) < 10:
+                thisday = "0" + thisday
+        return datetime.date(int(thisyear), int(thismonth), int(thisday))
+>>>>>>> b2d4da7d36c530951c0017e0a080b8fb36f75d16
 
     def getReviewData(self, soup, _album_id):
         reviews = soup.find("div", {"id": "critics", "class": "section"})
