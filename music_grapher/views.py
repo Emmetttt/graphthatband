@@ -13,7 +13,7 @@ import time
 import requests
 import math
 
-from .models import Band, Album, Reviews, BandSearch
+from .models import Band, Album, Review, BandSearch
 from .forms import BandForm
 
 def RetrieveInfo(name):
