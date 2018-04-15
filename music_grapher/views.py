@@ -5,6 +5,7 @@ from django.views import generic
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 
 import urllib.request
 from bs4 import BeautifulSoup
@@ -28,11 +29,11 @@ def band_input(request):
                                                                     'regression': bandsearch.band.regression,
                                                                     'bandname': bandsearch.band.band_name,
                                                                     'data': bandsearch.json_string,
-                                                                    'max_date': 2020,##bandsearch.max_date,
-                                                                    'min_date': 1900,#bandsearch.min_date,
-                                                                    'min_score': 0,#bandsearch.min_score,
-                                                                    'max_score': 100})#bandsearch.max_score})
-            except (NameError, AttributeError) as e:
+                                                                    'max_date': bandsearch.max_date,
+                                                                    'min_date': bandsearch.min_date,
+                                                                    'max_score': bandsearch.max_score,
+                                                                    'min_score': bandsearch.min_score})
+            except (NameError, AttributeError, ObjectDoesNotExist) as e:
                 ErrorMessage = 'Band name "' + bandname + '" not found, please try again.'
                 return render(request, 'music_grapher/index.html', {'Bform': Bform, 'Error': ErrorMessage})
 

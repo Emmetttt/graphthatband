@@ -1,4 +1,5 @@
 import datetime
+import time
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
@@ -43,22 +44,47 @@ class Review(models.Model):
 
 class BandSearch:
     def __init__(self, name):
-        self.band = Band.objects.get(band_name = name)
-        self.albums = list(Album.objects.filter(band_id = self.band.band_id))
-        self.json_string = self.jsonify()
-        self.min_date = 1900
-        self.max_date = 2020
-        self.min_score = 0
-        self.max_score = 100
+        if self.__getRecord(name) != "NULL":
+            self.band = Band.objects.get(band_name = self.__getRecord(name))
+            self.albums = list(Album.objects.filter(band_id = self.band.band_id))
+            self.json_string = self.jsonify()
+            self.MinMax() # Set min max values for dates and scores
+        else:
+            ValueError
+
+    def __getRecord(self, name):
+        ## Function to find the band from variations of the users input
+        ## The-Beatles -> The Bealtes
+        if Band.objects.filter(band_name = name.replace("-", " ")).count() == 1:
+            return name.replace("-", " ")
+        ## a ha -> a-ha
+        if Band.objects.filter(band_name = name.replace(" ", "-")).count() == 1:
+            return name.replace(" ", "-")
+        ## ac dc -> ac/dc
+        if Band.objects.filter(band_name = name.replace(" ", "/")).count() == 1:
+            return name.replace(" ", "/")
+        # check case
+        if Band.objects.filter(band_name = name.lower()).count() == 1:
+            return name.lower()
+        if Band.objects.filter(band_name = name.title()).count() == 1:
+            return name.title()
+        if Band.objects.filter(band_name = name.upper()).count() == 1:
+            return name.upper()
+        else:
+        ## Normal Input
+            return name
+
 
     def jsonify(self):
         data = []
         k=0
         for album in self.albums: ##Gets data into javascript readable format
             data.append('{name: "' + album.album_name + 
-                        '",x: "' + self.fract_year(str(album.date)) + 
-                        '",link: "' + album.album_link + 
-                        '",y: ' + str(album.critic_score_avg) + '}')
+                        '",x: "' + self.fract_year(str(album.date)) + '",' +
+                        'link: "' + album.album_link + '",' +
+                        'y: ' + str(album.critic_score_avg) +
+                        ',date: "' + str(album.date) + '"}')
+            print(str(album.date))
             data[k] = data[k].replace("'", "")
             k = k+1
 
@@ -71,7 +97,19 @@ class BandSearch:
         return str(int(times[0]) + (int(times[1])/13) + (int(times[2])/366))
 
     def MinMax(self):
-        pass
+        # Function to return min score, max score, min date, max date
+        # Scores
+        scores = [x.critic_score_avg for x in self.albums]
+        self.max_score = max(scores)
+        self.min_score = min(scores)
+
+        # Dates
+        dates = [x.date for x in self.albums]
+        self.max_date = max(dates)
+        self.max_date = int(self.max_date.year + 1)
+        self.min_date = min(dates)
+        self.min_date = int(self.min_date.year - 1)
+        return
 
 
 class PopDB:
