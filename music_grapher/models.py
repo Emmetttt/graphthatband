@@ -27,7 +27,7 @@ class Band(models.Model):
 
 class Album(models.Model):
     band_id = models.IntegerField(default=0) #Band FK
-    album_name = models.CharField(default="X", max_length=50)
+    album_name = models.CharField(default="x", max_length=50)
     album_link = models.CharField(default="x", max_length=200)
     critic_score_avg = models.IntegerField(default=-1) #Default to average score
     number_critic_reviews = models.IntegerField(default=0)
@@ -132,31 +132,6 @@ class BandSearch:
         self.min_date = min(dates)
         self.min_date = int(self.min_date.year - 1)
         return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class PopDB:
