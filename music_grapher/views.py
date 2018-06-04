@@ -28,13 +28,14 @@ def graph_band_search(request):
     try:
         bandsearch = BandSearch(bandname)
         return render(request, 'music_grapher/graph.html', {'regression': bandsearch.band.regression,
-                                                            'bandname': bandsearch.band.all_band_names,
+                                                            'bandname': bandsearch.band.band_name,
                                                             'data': bandsearch.json_string,
                                                             'max_date': bandsearch.max_date,
                                                             'min_date': bandsearch.min_date,
                                                             'max_score': bandsearch.max_score,
                                                             'min_score': bandsearch.min_score})
     except (NameError, AttributeError, ObjectDoesNotExist) as e:
-        ErrorMessage = 'Band name "'# + bandname + '" not found, please try again.'
+        ErrorMessage = 'The band "' + bandname + '" could not be found.'
+        print(ErrorMessage, e)
 
-    return render(request, 'music_grapher/index.html', {'Error': ''})
+    return render(request, 'music_grapher/index.html', {'Error': ErrorMessage})

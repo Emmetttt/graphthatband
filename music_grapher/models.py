@@ -65,7 +65,6 @@ class BandSearch:
                 self.albums = list(Album.objects.filter(band_id = self.band.band_id))
                 self.jsonify()
                 self.MinMax()
-            print(self.json_string)
         else:
             ValueError
 
