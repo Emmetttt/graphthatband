@@ -4,10 +4,70 @@
 <script src="http://code.highcharts.com/highcharts.js"></script>
 <script src="http://code.highcharts.com/modules/exporting.js"></script>
 <script type="text/javascript">
+  function BrowserSize(){
+    if (window.innerWidth <= 450 && window.innerHeight <= 850){
+      return "Small";
+    }
+    else if (window.innerWidth <= 550 && window.innerHeight <= 1000){
+      return "Medium";
+    }
+    else{
+      return "Large";
+    }
+  }
+
+  function scaleChart(inputString){
+
+    switch(inputString){
+      case "radiusPoints":
+        if (BrowserSize() == "Small") return 8;
+        else if (BrowserSize() == "Medium") return 6;
+        else if (BrowserSize() == "Large") return 4;
+        break;
+      case "axisFontSize":
+        if (BrowserSize() == "Small") return '44px';
+        else if (BrowserSize() == "Medium") return '36px';
+        else if (BrowserSize() == "Large") return '25px';
+        break;
+      case "XaxisLabelSize":
+        if (BrowserSize() == "Small") return '32px';
+        else if (BrowserSize() == "Medium") return '26px';
+        else if (BrowserSize() == "Large") return '17px';
+        break;
+      case "YaxisLabelSize":
+        if (BrowserSize() == "Small") return '17px';
+        else if (BrowserSize() == "Medium") return '17px';
+        else if (BrowserSize() == "Large") return '17px';
+        break;
+      case "legendFontSize":
+        if (BrowserSize() == "Small") return 25;
+        else if (BrowserSize() == "Medium") return 25;
+        else if (BrowserSize() == "Large") return 25;
+        break;
+    }
+  }
+
   $(function () {
       $('#container').highcharts({
           chart: {
-            height: document.body.clientHeight * 0.8
+            height: document.body.clientHeight * 0.8,
+            events: {
+              load: function() {
+                var data = {{ data|safe }};/*quotes come out as &quot; if not |safe*/
+                console.log(data)
+
+                for (key in data){
+                  this.addSeries({
+                    type: 'scatter',
+                    name: key,
+                    data: data[key], 
+                    marker: {
+                      radius: scaleChart("radiusPoints")
+                    }
+                  })
+                }
+              }
+            }
           },
 
           /* Axis */
@@ -40,12 +100,12 @@
           /* Pop up info */
           tooltip: {
           	formatter: function () {
-          		return '<b>Album Name: </b>' + this.point.name + 
+          		return '<b>Artist Name: </b>' + this.point.band + 
+                     '<br/><b>Album Name: </b>' + this.point.name + 
                      '<br/><b>Release Year: </b>' + this.point.date + 
                      '<br/><b>Critic Score: </b>' + this.point.y;
           	}
           },
-
           plotOptions: {
               series: {
                   cursor: 'pointer',
@@ -59,27 +119,6 @@
               }
           },
 
-          /* Data */
-          series: [//{
-              //type: 'line',
-              //name: 'Trend',
-              //data: {{ regression|safe }},
-              //marker: {
-              //    enabled: false
-              //},
-              //enableMouseTracking: false
-          //}, {
-              {
-              type: 'scatter',
-              name: 'Albums',
-              data: {{ data|safe }}, /*quotes come out as &quot; if not |safe*/
-              marker: {
-                  radius: 4,
-                  fillColor: '#949494'
-              }
-          }],
-
-          
           exporting: {
               buttons: {
                   customButton: {
@@ -117,9 +156,6 @@
       });
   });
 
-  function ChangeAxis() {
-    document.write(chart.yAxis[0])
-  }
 
   /**
    * (c) 2010-2017 Torstein Honsi
@@ -159,7 +195,7 @@
         labels: {
            style: {
               color: '#E0E0E3',
-              fontSize: '17px'
+              fontSize: scaleChart("XaxisLabelSize")
            }
         },
         lineColor: '#707073',
@@ -168,7 +204,7 @@
         title: {
            style: {
               color: '#A0A0A3',
-              fontSize: '25px'
+              fontSize: scaleChart("axisFontSize")
 
            }
         }
@@ -178,7 +214,7 @@
         labels: {
            style: {
               color: '#E0E0E3',
-              fontSize: '17px'
+              fontSize: scaleChart("YaxisLabelSize")
            }
         },
         lineColor: '#58585a',
@@ -188,7 +224,7 @@
         title: {
            style: {
               color: '#A0A0A3',
-              fontSize: '25px'
+              fontSize: scaleChart("axisFontSize")
            }
         }
      },
@@ -218,10 +254,10 @@
         }
      },
      legend: {
-        enabled: false,
+        enabled: true,
         itemStyle: {
            color: '#E0E0E3',
-           fontSize: 25,
+           fontSize: scaleChart("legendFontSize"),
         },
         itemHoverStyle: {
            color: '#FFF'
@@ -333,6 +369,24 @@
   // Apply the theme
   Highcharts.setOptions(Highcharts.theme);
 
+  window.onorientationchange = function() { 
+      var orientation = window.orientation; 
+          switch(orientation) { 
+              case 0:
+              case 90:
+              case -90: window.location.reload(); 
+              break; } 
+  };
+
+  function addBandForm() {
+    var url = window.location.href;
+    var urlobj = new URL(url);
+    var prevBand = urlobj.searchParams.get("bandname");
+    var searchbar = document.getElementById("id_band_input");
+    searchbar.value = searchbar.value + ";" + prevBand;
+    console.log(searchbar.value);
+  }
+
 </script>
 
 <style>
@@ -366,12 +420,12 @@
     padding: 0px 0px; 
   }
   #id_band_input {
-    width: 90%;
+    text-align: center;
+    width: 80%;
     height: 70px;
     font-size: 44;
     vertical-align: top; 
     float: left;
-    text-align: left;
     background-color: #e6e6e6;
     padding-left: 20px;
   }
@@ -385,10 +439,10 @@
     </div>
     <br>
     <div class="col-lg-12 navbar-fixed-bottom">
-      <form method="POST" style="width:100%" class="form-horizontal" align="center">
-          {% csrf_token %}
-          {{ Bform }}
-          <button type="submit"  class="btn-submit glyphicon-search"></button>
+      <form action="/band/" method="GET" style="width:100%" class="form-horizontal" align="center">
+        <input type="text" name="bandname" id="id_band_input" maxlength="50" required="">
+        <button type="submit" name="singleBandPost" class="btn-submit glyphicon-search"></button>
+        <button type="submit" onclick="return addBandForm()" name="addBandPost" class="btn-submit glyphicon-plus"></button>
       </form>
     </div>
 </body>

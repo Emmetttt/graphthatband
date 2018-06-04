@@ -2,12 +2,49 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
 <style>
-body {
-    background-color: #3e3e40;
-}
-.title {
-    color: #E0E0E3;
-}
+  body {
+      background-color: #3e3e40;
+  }
+  .title {
+      color: #E0E0E3;
+  }
+  .subtitle {
+      color: #9ca0a8;
+  }
+  .btn-submit {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 44;
+    height: 70px;
+    width: 10%;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-family: 'Glyphicons Halflings';
+    vertical-align: top;
+    float: right;
+  }
+  .col-lg-12 {
+    min-height: 1px;
+    padding-right: 0px;
+    padding-left: 0px; 
+    padding: 0px 0px; 
+  }
+  #id_band_input {
+    text-align: center;
+    width: 90%;
+    height: 70px;
+    font-size: 44;
+    vertical-align: top; 
+    float: left;
+    background-color: #e6e6e6;
+    padding-left: 20px;
+  }
+
 </style>
 </head>
 
@@ -15,12 +52,21 @@ body {
     <h1 class="title text-center">
     Graph That Band
     </h1>
+    <br>
+    <br>
+    <h2 class="subtitle" align="center">
+    Search a band to find their album ratings.
+    </h2>
+    <br>
     <h2 align="center">
     {{ Error }}
     </h2>
     <br>
-    <form method="POST" class="post-form" align="center">{% csrf_token %}
-        {{ Bform }}
-        <button type="submit" class="save btn btn-default">Submit</button>
+    <form action="/band/" method="GET" style="width:100%" class="form-horizontal" align="center">
+        <input type="text" name="bandname" id="id_band_input" maxlength="50" required="">
+        <button type="submit" class="btn-submit glyphicon-search"></button>
     </form>
+   <!--  <form method="POST" class="post-form" align="center">{% csrf_token %}
+        <button type="submit" name="singleBandPost" class="btn-submit glyphicon-search"></button>
+    </form> -->
 </div>

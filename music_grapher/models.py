@@ -3,6 +3,11 @@ import time
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
+from django.http import JsonResponse
+from django.core import serializers
+import json
+
+
 
 #imports for BandSearch
 import urllib.request
@@ -22,7 +27,7 @@ class Band(models.Model):
 
 class Album(models.Model):
     band_id = models.IntegerField(default=0) #Band FK
-    album_name = models.CharField(default="x", max_length=50)
+    album_name = models.CharField(default="X", max_length=50)
     album_link = models.CharField(default="x", max_length=200)
     critic_score_avg = models.IntegerField(default=-1) #Default to average score
     number_critic_reviews = models.IntegerField(default=0)
@@ -45,30 +50,42 @@ class Review(models.Model):
 class BandSearch:
     def __init__(self, name):
         if self.__getRecord(name) != "NULL":
-            self.band = Band.objects.get(band_name = self.__getRecord(name))
-            self.albums = list(Album.objects.filter(band_id = self.band.band_id))
-            self.json_string = self.jsonify()
-            self.MinMax() # Set min max values for dates and scores
+            bandnames = name.split(";")
+            # if len(bandnames) == 1:
+            #     self.band = Band.objects.get(band_name__iexact = self.__getRecord(name[0]))
+            #     self.albums = list(Album.objects.filter(band_id = self.band.band_id))
+            #     self.json_string = self.jsonify()
+            #     self.MinMax() # Set min max values for dates and scores
+            # else:
+            self.json_string = {}
+            self.all_band_names = ''
+            for bandname in bandnames:
+                self.band = Band.objects.get(band_name__iexact = self.__getRecord(bandname))
+                self.all_band_names = self.all_band_names + self.band.band_name
+                self.albums = list(Album.objects.filter(band_id = self.band.band_id))
+                self.jsonify()
+                self.MinMax()
+            print(self.json_string)
         else:
             ValueError
 
     def __getRecord(self, name):
         ## Function to find the band from variations of the users input
         ## The-Beatles -> The Bealtes
-        if Band.objects.filter(band_name = name.replace("-", " ")).count() == 1:
+        if Band.objects.filter(band_name__iexact = name.replace("-", " ")).count() == 1:
             return name.replace("-", " ")
         ## a ha -> a-ha
-        if Band.objects.filter(band_name = name.replace(" ", "-")).count() == 1:
+        if Band.objects.filter(band_name__iexact = name.replace(" ", "-")).count() == 1:
             return name.replace(" ", "-")
         ## ac dc -> ac/dc
-        if Band.objects.filter(band_name = name.replace(" ", "/")).count() == 1:
+        if Band.objects.filter(band_name__iexact = name.replace(" ", "/")).count() == 1:
             return name.replace(" ", "/")
         # check case
-        if Band.objects.filter(band_name = name.lower()).count() == 1:
+        if Band.objects.filter(band_name__iexact = name.lower()).count() == 1:
             return name.lower()
-        if Band.objects.filter(band_name = name.title()).count() == 1:
+        if Band.objects.filter(band_name__iexact = name.title()).count() == 1:
             return name.title()
-        if Band.objects.filter(band_name = name.upper()).count() == 1:
+        if Band.objects.filter(band_name__iexact = name.upper()).count() == 1:
             return name.upper()
         else:
         ## Normal Input
@@ -76,20 +93,31 @@ class BandSearch:
 
 
     def jsonify(self):
-        data = []
-        k=0
-        for album in self.albums: ##Gets data into javascript readable format
-            data.append('{name: "' + album.album_name + 
-                        '",x: "' + self.fract_year(str(album.date)) + '",' +
-                        'link: "' + album.album_link + '",' +
-                        'y: ' + str(album.critic_score_avg) +
-                        ',date: "' + str(album.date) + '"}')
-            print(str(album.date))
-            data[k] = data[k].replace("'", "")
-            k = k+1
+        for album in self.albums:
+            if self.band.band_name not in self.json_string:
+                self.json_string[self.band.band_name] = [{
+                    'band': self.band.band_name,
+                    'name': album.album_name, 
+                    'x': self.fract_year(str(album.date)),
+                    'link': album.album_link,
+                    'y': album.critic_score_avg,
+                    'date': str(album.date)
+                    }]
+            else:
+                self.json_string[self.band.band_name].append({
+                    'band': self.band.band_name,
+                    'name': album.album_name, 
+                    'x': self.fract_year(str(album.date)),
+                    'link': album.album_link,
+                    'y': album.critic_score_avg,
+                    'date': str(album.date)
+                    })
 
-        data = str(data).replace("'", "")
-        return data
+    def AppendJson(self, dataToAppend):
+        #print("\n\n\n\n" + dataToAppend + "\n\n\n\n")
+        jsondata = json.dumps(dataToAppend)
+        #print("\n\n\n\n" + dataToAppend + "\n\n\n\n")
+        self.json_string['artistdata'].append(jsondata)
 
     def fract_year(self, date):
         #February 16,  2015 -> 2015.2something
@@ -110,6 +138,31 @@ class BandSearch:
         self.min_date = min(dates)
         self.min_date = int(self.min_date.year - 1)
         return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class PopDB:
