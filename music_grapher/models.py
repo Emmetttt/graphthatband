@@ -1,4 +1,5 @@
 import datetime
+import time
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
@@ -92,7 +93,6 @@ class BandSearch:
 
 
     def jsonify(self):
-<<<<<<< HEAD
         for album in self.albums:
             if self.band.band_name not in self.json_string:
                 self.json_string[self.band.band_name] = [{
@@ -112,28 +112,6 @@ class BandSearch:
                     'y': album.critic_score_avg,
                     'date': str(album.date)
                     })
-
-    def AppendJson(self, dataToAppend):
-        #print("\n\n\n\n" + dataToAppend + "\n\n\n\n")
-        jsondata = json.dumps(dataToAppend)
-        #print("\n\n\n\n" + dataToAppend + "\n\n\n\n")
-        self.json_string['artistdata'].append(jsondata)
-=======
-        data = []
-        k=0
-        for album in self.albums: ##Gets data into javascript readable format
-            data.append('{name: "' + album.album_name +
-                        '",x: "' + self.fract_year(str(album.date)) + '",' +
-                        'link: "' + album.album_link + '",' +
-                        'y: ' + str(album.critic_score_avg) +
-                        ',date: "' + str(album.date) + '"}')
-            print(str(album.date))
-            data[k] = data[k].replace("'", "")
-            k = k+1
-
-        data = str(data).replace("'", "")
-        return data
->>>>>>> d9d98d1e9d9182979b4860f7774efa90d19b76cb
 
     def fract_year(self, date):
         #February 16,  2015 -> 2015.2something
@@ -273,6 +251,7 @@ class PopDB:
                 date = row.text
                 date = date[:-15]
                 album.date = self.getdate(date)
+                print(album.date)
             elif "Label" in row.text:
                 label = row.text
                 label = label[:-8]
@@ -300,26 +279,20 @@ class PopDB:
             "December": "11",
             "November": "12",
         }
+        print(string)
         indiv = string.split(" ")
-        if len(indiv) == 2:
-            thisyear = indiv[1]
-            thismonth = 1
-            thisday = 1
-        elif len(indiv) == 3:
-            thisyear = indiv[2]
-            thismonth = months[indiv[0]]
-            thisday = 1
+        if len(indiv) < 3:
+            thisyear = string.relace(" ")
+            thismonth = 0
+            thisday = 0
         else:
             thisyear = indiv[3]
             thismonth = months[indiv[0]]
             thisday = indiv[1]
             thisday = thisday.replace(",", "")
-        #print(indiv, int(thisyear), int(thismonth), int(thisday))
-        try:
-            returndate = datetime.date(int(thisyear), int(thismonth), int(thisday))
-        except ValueError:
-            returndate = datetime.date(int(thisyear), int(thismonth), int(thisday)-2)
-        return returndate
+            if int(thisday) < 10:
+                thisday = "0" + thisday
+        return datetime.date(int(thisyear), int(thismonth), int(thisday))
 
     def getReviewData(self, soup, _album_id):
         reviews = soup.find("div", {"id": "critics", "class": "section"})
@@ -331,8 +304,7 @@ class PopDB:
                 }
             review["score"] = row.find("span", {"itemprop": "ratingValue"}).text
             review["publication"] = row.find("span", {"itemprop": "name"}).text
-            if row.find("a", {"itemprop": "url", "rel": "nofollow"}):
-                review["link"] = row.find("a", {"itemprop": "url", "rel": "nofollow"})['href']
+            review["link"] = row.find("a", {"itemprop": "url", "rel": "nofollow"})['href']
             Review.objects.create(album_id = _album_id,
                                   score = review["score"],
                                   publication = review["publication"],
